@@ -1,0 +1,28 @@
+# Virtual environment
+unstruct-rag-env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+
+# Output files
+*.json
+*.csv
+
+# Test data
+*.pdf
+
+# API keys / env
+.env
+*.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.cursor*
