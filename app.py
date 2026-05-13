@@ -3,8 +3,10 @@ from unstructured.chunking.title import chunk_by_title
 from unstructured.staging.base import elements_to_json, convert_to_dict
 from unstructured.cleaners.core import clean_extra_whitespace
 import json
+import os
 
-PDF_FILE = "milgram-1.pdf"
+DATA_DIR = "data"
+PDF_FILE = os.path.join(DATA_DIR, "milgram-1.pdf")
 
 # ---------- 1. Partition ----------
 print("=== Partitionerar PDF ===")
