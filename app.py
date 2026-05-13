@@ -12,7 +12,7 @@ PDF_FILE = os.path.join(DATA_DIR, "milgram-1.pdf")
 print("=== Partitionerar PDF ===")
 elements = partition_pdf(
     filename=PDF_FILE,
-    strategy="fast",          # "fast" | "hi_res" (hi_res kräver Tesseract + Poppler)
+    strategy="hi_res",        # "fast" | "hi_res" (hi_res kräver Tesseract + Poppler + YOLOX)
     include_metadata=True,
 )
 
