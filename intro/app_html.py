@@ -8,7 +8,7 @@ import os
 
 unstructured_pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
-DATA_DIR = "../data"
+DATA_DIR = os.path.join(os.path.dirname(__file__), "../data")
 HTML_FILE = os.path.join(DATA_DIR, "el_nino.html")
 
 # ---------- 1. Partition ----------

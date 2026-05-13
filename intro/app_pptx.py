@@ -8,7 +8,7 @@ import os
 
 unstructured_pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
-DATA_DIR = "../data"
+DATA_DIR = os.path.join(os.path.dirname(__file__), "../data")
 PPTX_FILE = os.path.join(DATA_DIR, "kg-paulo.pptx")
 
 # ---------- 1. Partition ----------
