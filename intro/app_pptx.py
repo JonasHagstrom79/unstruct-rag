@@ -2,8 +2,11 @@ from unstructured.partition.pptx import partition_pptx
 from unstructured.chunking.title import chunk_by_title
 from unstructured.staging.base import elements_to_json, convert_to_dict
 from unstructured.cleaners.core import clean_extra_whitespace
+import unstructured_pytesseract
 import json
 import os
+
+unstructured_pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 DATA_DIR = "../data"
 PPTX_FILE = os.path.join(DATA_DIR, "kg-paulo.pptx")
