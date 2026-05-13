@@ -51,3 +51,8 @@ print("\n=== Metadata (element 0) ===")
 if elements:
     data = convert_to_dict(elements[:1])
     print(json.dumps(data[0], indent=2, ensure_ascii=False))
+
+# ---------- 6. Page summary ----------
+pages = [el.metadata.page_number for el in elements if el.metadata.page_number]
+if pages:
+    print(f"\n=== Pages processed: {min(pages)}-{max(pages)} (total {max(pages)} pages) ===")

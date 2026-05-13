@@ -56,3 +56,8 @@ print("\n=== Metadata (element 0) ===")
 if elements:
     data = convert_to_dict(elements[:1])
     print(json.dumps(data[0], indent=2, ensure_ascii=False))
+
+# ---------- 6. Sidöversikt ----------
+pages = [el.metadata.page_number for el in elements if el.metadata.page_number]
+if pages:
+    print(f"\n=== Sidor bearbetade: {min(pages)}-{max(pages)} (totalt {max(pages)} sidor) ===")
