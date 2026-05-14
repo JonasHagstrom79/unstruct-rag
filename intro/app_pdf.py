@@ -3,13 +3,17 @@ from unstructured.chunking.title import chunk_by_title
 from unstructured.staging.base import elements_to_json, convert_to_dict
 from unstructured.cleaners.core import clean_extra_whitespace
 import unstructured_pytesseract
+import argparse
 import json
 import os
 
 unstructured_pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), "../data")
-PDF_FILE = os.path.join(DATA_DIR, "mindset.pdf")
+parser = argparse.ArgumentParser(description="Partition and chunk a PDF file.")
+parser.add_argument("file", help="Path to the PDF file")
+args = parser.parse_args()
+
+PDF_FILE = args.file
 
 # ---------- 1. Partition ----------
 print("=== Partitioning PDF ===")
