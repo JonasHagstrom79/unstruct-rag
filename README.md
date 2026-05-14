@@ -34,6 +34,8 @@ python -m venv unstruct-rag-env
 pip install "unstructured[all-docs]"
 pip install unstructured-inference
 pip install python-dotenv
+pip install chromadb
+pip install openai
 ```
 
 ## Configuration
@@ -77,6 +79,23 @@ output/
 Each chunk in `chunks.json` contains:
 - `text` — the content to embed and send to an LLM
 - `metadata` — source file, page number, file type (for citations)
+
+### RAG — index and query
+
+After generating `chunks.json`, index it into Chroma and query with metadata filtering:
+
+```powershell
+# Index chunks (runs once, skips if already indexed)
+python ./intro/app_rag.py output/mindset/chunks.json
+
+# Ask a question
+python ./intro/app_rag.py output/mindset/chunks.json --query "What is a growth mindset?"
+
+# Filter by page number
+python ./intro/app_rag.py output/mindset/chunks.json --query "What is a growth mindset?" --page 7
+```
+
+The vector index is stored in `chroma_db/` (excluded from git).
 
 ## Strategy (PDF only)
 
