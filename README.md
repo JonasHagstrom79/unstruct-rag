@@ -1,6 +1,6 @@
 # Preprocessing Unstructured Data
 
-Local Python project for extracting and processing text from PDF files using [Unstructured](https://github.com/Unstructured-IO/unstructured). Built as part of a Packt course.
+Local Python project for extracting, chunking, and exporting text from documents using [Unstructured](https://github.com/Unstructured-IO/unstructured). Built as part of a Packt course.
 
 ## Requirements
 
@@ -28,38 +28,59 @@ $env:PATH += ";C:\Program Files\Tesseract-OCR;" + $p1 + $p2
 
 ## Installation
 
-```bash
+```powershell
 python -m venv unstruct-rag-env
 .\unstruct-rag-env\Scripts\Activate.ps1
 pip install "unstructured[all-docs]"
 pip install unstructured-inference
+pip install python-dotenv
+```
+
+## Configuration
+
+Create a `.env` file in the project root (never commit this file):
+
+```
+HF_TOKEN=hf_xxxxxxxxxxxx
+OPENAI_API_KEY=sk-xxxxxxxxxxxx
 ```
 
 ## Usage
 
-Place a PDF file in the project folder and update `PDF_FILE` in `app.py`:
+Place your source files in the `data/` folder and run the script matching the file type:
 
-```python
-PDF_FILE = "your-file.pdf"
-```
-
-Then run:
-
-```bash
-python app.py
+```powershell
+python ./intro/app_pdf.py  data/mindset.pdf
+python ./intro/app_html.py data/el_nino.html
+python ./intro/app_md.py   data/devops-roadmap.md
+python ./intro/app_pptx.py data/kg-paulo.pptx
 ```
 
 ### Output
 
-- Prints element types (Title, NarrativeText, Table, etc.) and counts
-- Displays the first 5 extracted elements
-- Chunks the content by headings
-- Exports all elements to `elements.json`
-- Displays metadata for the first element (coordinates, page number, file type)
+Each script saves two files under `output/<source-name>/`:
 
-## Strategy
+| File | Contents |
+|------|----------|
+| `elements.json` | All extracted elements (raw, granular) |
+| `chunks.json` | Chunked text ready for embedding/RAG |
 
-In `app.py` you can choose between two strategies:
+Example after running `app_pdf.py data/mindset.pdf`:
+
+```
+output/
+  mindset/
+    elements.json
+    chunks.json
+```
+
+Each chunk in `chunks.json` contains:
+- `text` — the content to embed and send to an LLM
+- `metadata` — source file, page number, file type (for citations)
+
+## Strategy (PDF only)
+
+In `intro/app_pdf.py` you can choose between two strategies:
 
 | Strategy | Speed | Requires | Best for |
 |----------|-------|----------|----------|
