@@ -37,16 +37,20 @@ for i, chunk in enumerate(chunks[:3]):
     print(chunk.text[:300])
 
 # ---------- 4. Export to JSON ----------
-output_file = "elements_md.json"
-with open(output_file, "w", encoding="utf-8") as f:
-    f.write(elements_to_json(elements))
-print(f"\n=== Exported {len(elements)} elements to {output_file} ===")
+source_name = os.path.splitext(os.path.basename(MD_FILE))[0]
+output_dir = os.path.join(os.path.dirname(__file__), "../output", source_name)
+os.makedirs(output_dir, exist_ok=True)
 
-chunks_output_file = "chunks_md.json"
+elements_file = os.path.join(output_dir, "elements.json")
+with open(elements_file, "w", encoding="utf-8") as f:
+    f.write(elements_to_json(elements))
+print(f"\n=== Exported {len(elements)} elements to {elements_file} ===")
+
+chunks_file = os.path.join(output_dir, "chunks.json")
 chunks_dicts = [{"text": chunk.text, "metadata": chunk.metadata.to_dict()} for chunk in chunks]
-with open(chunks_output_file, "w", encoding="utf-8") as f:
+with open(chunks_file, "w", encoding="utf-8") as f:
     json.dump(chunks_dicts, f, indent=2, ensure_ascii=False)
-print(f"=== Exported {len(chunks)} chunks to {chunks_output_file} ===")
+print(f"=== Exported {len(chunks)} chunks to {chunks_file} ===")
 
 # ---------- 5. Metadata for first element ----------
 print("\n=== Metadata (element 0) ===")
