@@ -42,6 +42,12 @@ with open(output_file, "w", encoding="utf-8") as f:
     f.write(elements_to_json(elements))
 print(f"\n=== Exported {len(elements)} elements to {output_file} ===")
 
+chunks_output_file = "chunks_html.json"
+chunks_dicts = [{"text": chunk.text, "metadata": chunk.metadata.to_dict()} for chunk in chunks]
+with open(chunks_output_file, "w", encoding="utf-8") as f:
+    json.dump(chunks_dicts, f, indent=2, ensure_ascii=False)
+print(f"=== Exported {len(chunks)} chunks to {chunks_output_file} ===")
+
 # ---------- 5. Metadata for first element ----------
 print("\n=== Metadata (element 0) ===")
 if elements:
