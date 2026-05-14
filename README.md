@@ -91,6 +91,9 @@ python ./intro/app_rag.py output/mindset/chunks.json
 # Ask a question
 python ./intro/app_rag.py output/mindset/chunks.json --query "What is a growth mindset?"
 
+# Filter by chapter
+python ./intro/app_rag.py output/mindset/chunks.json --query "What is a growth mindset?" --chapter "Embracing a Growth Mindset"
+
 # Filter by page number
 python ./intro/app_rag.py output/mindset/chunks.json --query "What is a growth mindset?" --page 7
 ```

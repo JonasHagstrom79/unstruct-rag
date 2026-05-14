@@ -18,10 +18,20 @@ def embed(texts):
     return [item.embedding for item in response.data]
 
 
+def extract_chapter(text):
+    """First non-empty line of a chunk is always the section title from chunk_by_title."""
+    for line in text.split("\n"):
+        line = line.strip()
+        if line:
+            return line
+    return ""
+
+
 parser = argparse.ArgumentParser(description="Index chunks into Chroma and query with metadata filtering.")
 parser.add_argument("chunks_file", help="Path to chunks.json (e.g. output/mindset/chunks.json)")
 parser.add_argument("--query", help="Question to ask against the indexed chunks")
 parser.add_argument("--page", type=int, help="Filter results to a specific page number")
+parser.add_argument("--chapter", help="Filter results to a specific chapter/section title")
 args = parser.parse_args()
 
 # Derive collection name from parent folder: output/mindset/chunks.json -> "mindset"
@@ -48,6 +58,7 @@ if collection.count() == 0:
             "filename": c["metadata"].get("filename") or "",
             "page_number": c["metadata"].get("page_number") or 0,
             "filetype": c["metadata"].get("filetype") or "",
+            "chapter": extract_chapter(c["text"]),
         }
         for c in chunks
     ]
@@ -59,7 +70,13 @@ else:
     print(f"Collection '{collection_name}' already has {collection.count()} chunks. Skipping indexing.")
 
 if args.query:
-    where = {"page_number": args.page} if args.page else None
+    if args.chapter:
+        where = {"chapter": args.chapter}
+    elif args.page:
+        where = {"page_number": args.page}
+    else:
+        where = None
+
     query_embedding = embed([args.query])[0]
     results = collection.query(
         query_embeddings=[query_embedding],
@@ -74,5 +91,5 @@ if args.query:
         results["distances"][0],
     )):
         score = 1 - distance
-        print(f"\n--- Result {i+1} | page {meta['page_number']} | score {score:.3f} ---")
+        print(f"\n--- Result {i+1} | chapter: {meta['chapter']} | page {meta['page_number']} | score {score:.3f} ---")
         print(doc[:400])
