@@ -38,7 +38,7 @@ for el in elements[:5]:
 
 # ---------- 3. Chunk by title ----------
 print("\n=== Chunks (chunk_by_title) ===")
-chunks = chunk_by_title(elements, max_characters=500, new_after_n_chars=400)
+chunks = chunk_by_title(elements, combine_text_under_n_chars=100, max_characters=500, new_after_n_chars=400)
 print(f"Number of chunks: {len(chunks)}")
 for i, chunk in enumerate(chunks[:3]):
     print(f"\n--- Chunk {i+1} ---")
