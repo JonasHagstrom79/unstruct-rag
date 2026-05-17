@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from unstructured.partition.pdf import partition_pdf
 from unstructured.chunking.title import chunk_by_title
 from unstructured.staging.base import elements_to_json, convert_to_dict
