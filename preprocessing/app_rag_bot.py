@@ -115,11 +115,11 @@ print(f"\nIndexed {len(documents)} documents into Chroma.")
 vector_store = Chroma(persist_directory=persist_directory, embedding_function=embeddings)
 retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 3})
 
-# ---------- 9. Build RAG chain ----------
+# ---------- 9. Build RAG chain (LCEL) ----------
 from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
 from langchain_openai import ChatOpenAI
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain.chains import create_retrieval_chain
 
 template = """You are an AI assistant specialized in answering questions related to Advancing Post-OCR Correction:
 A Comparative Study of Synthetic Data.
@@ -135,36 +135,35 @@ Respond in Markdown:"""
 prompt = PromptTemplate.from_template(template)
 llm = ChatOpenAI(temperature=0, model="gpt-4o-mini", api_key=openai_api_key)
 
-document_chain = create_stuff_documents_chain(llm, prompt)
-retrieval_chain = create_retrieval_chain(retriever, document_chain)
+def format_docs(docs):
+    return "\n\n".join(doc.page_content for doc in docs)
+
+def build_chain(ret):
+    return (
+        {"context": ret | format_docs, "input": RunnablePassthrough()}
+        | prompt
+        | llm
+        | StrOutputParser()
+    )
 
 # ---------- 10. Queries ----------
 print("\n== OCR Results ==\n")
-ocr_res = retrieval_chain.invoke({"input": "tell me about post-OCR domain?", "chat_history": []})
-pprint.pprint(ocr_res["answer"])
+pprint.pprint(build_chain(retriever).invoke("tell me about post-OCR domain?"))
 
-# DevOps query with source filter
-filter_retriever = vector_store.as_retriever(
+print("\n== DevOps Results ==\n")
+devops_retriever = vector_store.as_retriever(
     search_type="similarity",
     search_kwargs={"k": 1, "filter": {"source": "devops-roadmap.md"}},
 )
-retrieval_chain = create_retrieval_chain(filter_retriever, document_chain)
-print("\n== DevOps Results ==\n")
-dev_ops = retrieval_chain.invoke({
-    "input": "what are some popular programming languages for DevOps? and what resources are available for learning them?",
-    "chat_history": [],
-})
-pprint.pprint(dev_ops["answer"])
+pprint.pprint(build_chain(devops_retriever).invoke(
+    "what are some popular programming languages for DevOps? and what resources are available for learning them?"
+))
 
-# Knowledge Graph query with source filter
-filter_retriever = vector_store.as_retriever(
+print("\n== KG Results ==\n")
+kg_retriever = vector_store.as_retriever(
     search_type="similarity",
     search_kwargs={"k": 1, "filter": {"source": "kg-paulo.pptx"}},
 )
-retrieval_chain = create_retrieval_chain(filter_retriever, document_chain)
-print("\n== KG Results ==\n")
-kg_res = retrieval_chain.invoke({
-    "input": "give me the main key points about Knowledge Graph?",
-    "chat_history": [],
-})
-pprint.pprint(kg_res["answer"])
+pprint.pprint(build_chain(kg_retriever).invoke(
+    "give me the main key points about Knowledge Graph?"
+))
