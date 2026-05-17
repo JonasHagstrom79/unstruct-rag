@@ -46,8 +46,8 @@ pprint.pprint(res)
 tables = [el for el in pdf_elements if el.category == "Table"]
 if tables:
     table_html = tables[0].metadata.text_as_html
-    parser = etree.XMLParser(remove_blank_text=True)
-    tree = etree.parse(StringIO(table_html), parser)
+    xml_parser = etree.XMLParser(remove_blank_text=True)
+    tree = etree.parse(StringIO(table_html), xml_parser)
     print("\n=== First Table (HTML) ===")
     print(etree.tostring(tree, pretty_print=True).decode())
 

@@ -2,12 +2,10 @@ from unstructured.partition.html import partition_html
 from unstructured.chunking.title import chunk_by_title
 from unstructured.staging.base import elements_to_json, convert_to_dict
 from unstructured.cleaners.core import clean_extra_whitespace
-import unstructured_pytesseract
 import argparse
 import json
 import os
 
-unstructured_pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 parser = argparse.ArgumentParser(description="Partition and chunk an HTML file.")
 parser.add_argument("file", help="Path to the HTML file")

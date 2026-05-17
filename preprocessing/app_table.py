@@ -36,6 +36,10 @@ print(f"Total elements: {len(elements)}")
 tables = [el for el in elements if el.category == "Table"]
 print(f"Tables found: {len(tables)}\n")
 
+if not tables:
+    print("No tables found in document.")
+    exit(0)
+
 # ---------- 3. First table: raw text ----------
 print("=== Table 1 — raw text ===")
 pprint.pprint(tables[0].text)
