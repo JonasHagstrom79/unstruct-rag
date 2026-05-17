@@ -4,7 +4,7 @@ Packt-kurs om att extrahera, chunka och indexera text från dokument (PDF, HTML,
 
 ## Vad som är implementerat
 
-### Partitioneringsskript (`intro/`)
+### Partitioneringsskript (`preprocessing/`)
 | Skript | Filtyp | Output |
 |---|---|---|
 | `app_pdf.py` | PDF (hi_res, OCR) | `output/<namn>/elements.json` + `chunks.json` |
@@ -14,11 +14,17 @@ Packt-kurs om att extrahera, chunka och indexera text från dokument (PDF, HTML,
 
 Alla skript chunkar med `chunk_by_title(combine_text_under_n_chars=100, max_characters=500, new_after_n_chars=400)`.
 
-### RAG-pipeline (`intro/app_rag.py`)
+### RAG-pipeline (`preprocessing/app_rag.py`)
 - Läser `chunks.json`, embeddar med OpenAI (`text-embedding-3-small`), indexerar i ChromaDB
 - Guardrail: hoppar över indexering om collection redan finns (`get_or_create_collection` + `count()`)
 - Stöder hybrid search med `--chapter` och `--page` metadata-filter
 - Vektorindex lagras i `chroma_db/`
+
+### Tabellextraktion (`preprocessing/app_table.py`)
+- Partitionerar PDF med `hi_res` + `infer_table_structure=True`
+- Filtrerar ut `Table`-element, visar råtext och HTML-struktur
+- Sammanfattar tabellinnehåll med OpenAI `gpt-4o-mini`
+- API-nycklar laddas via `dotenv_values()` innan unstructured-importer
 
 ## Hur man kör
 
@@ -27,19 +33,23 @@ Alla skript chunkar med `chunk_by_title(combine_text_under_n_chars=100, max_char
 .\unstruct-rag-env\Scripts\Activate.ps1
 
 # Partitionera ett dokument
-python ./intro/app_pdf.py data/mindset.pdf
+python ./preprocessing/app_pdf.py data/mindset.pdf
 
 # Indexera och fråga
-python ./intro/app_rag.py output/mindset/chunks.json --query "What is a growth mindset?"
+python ./preprocessing/app_rag.py output/mindset/chunks.json --query "What is a growth mindset?"
 
 # Med metadata-filter
-python ./intro/app_rag.py output/mindset/chunks.json --query "..." --chapter "Embracing a Growth Mindset"
-python ./intro/app_rag.py output/mindset/chunks.json --query "..." --page 7
+python ./preprocessing/app_rag.py output/mindset/chunks.json --query "..." --chapter "Embracing a Growth Mindset"
+python ./preprocessing/app_rag.py output/mindset/chunks.json --query "..." --page 7
+
+# Extrahera och sammanfatta tabeller
+python ./preprocessing/app_table.py data/embedded-images-tables.pdf
 ```
 
 ## Viktigt — Windows-specifikt
 - Tesseract måste sättas explicit i varje skript: `unstructured_pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"`
 - Venv-subprocessar ärver inte PATH på Windows — PATH-lösningen räcker inte
+- `dotenv_values()` måste anropas INNAN unstructured-importer i skript som behöver API-nycklar
 
 ## Pågående kurs — nästa sektion
 Document Image Analysis (DIA): preprocessing av komplexa PDF:er och bilder.
@@ -47,4 +57,4 @@ Två tekniker:
 - **Document Layout Models** (YOLOX) — object detection + OCR, det `hi_res` redan använder
 - **Vision Transformers** — generativ, flexibel men dyrare och kan hallucinera
 
-Hands-on-kod för bilder/tabeller kommer härnäst.
+Tabellextraktion klar. Nästa steg troligen bildextraktion från PDF.

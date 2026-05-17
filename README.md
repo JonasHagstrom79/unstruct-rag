@@ -52,10 +52,10 @@ OPENAI_API_KEY=sk-xxxxxxxxxxxx
 Place your source files in the `data/` folder and run the script matching the file type:
 
 ```powershell
-python ./intro/app_pdf.py  data/mindset.pdf
-python ./intro/app_html.py data/el_nino.html
-python ./intro/app_md.py   data/devops-roadmap.md
-python ./intro/app_pptx.py data/kg-paulo.pptx
+python ./preprocessing/app_pdf.py  data/mindset.pdf
+python ./preprocessing/app_html.py data/el_nino.html
+python ./preprocessing/app_md.py   data/devops-roadmap.md
+python ./preprocessing/app_pptx.py data/kg-paulo.pptx
 ```
 
 ### Output
@@ -86,23 +86,52 @@ After generating `chunks.json`, index it into Chroma and query with metadata fil
 
 ```powershell
 # Index chunks (runs once, skips if already indexed)
-python ./intro/app_rag.py output/mindset/chunks.json
+python ./preprocessing/app_rag.py output/mindset/chunks.json
 
 # Ask a question
-python ./intro/app_rag.py output/mindset/chunks.json --query "What is a growth mindset?"
+python ./preprocessing/app_rag.py output/mindset/chunks.json --query "What is a growth mindset?"
 
 # Filter by chapter
-python ./intro/app_rag.py output/mindset/chunks.json --query "What is a growth mindset?" --chapter "Embracing a Growth Mindset"
+python ./preprocessing/app_rag.py output/mindset/chunks.json --query "What is a growth mindset?" --chapter "Embracing a Growth Mindset"
 
 # Filter by page number
-python ./intro/app_rag.py output/mindset/chunks.json --query "What is a growth mindset?" --page 7
+python ./preprocessing/app_rag.py output/mindset/chunks.json --query "What is a growth mindset?" --page 7
 ```
 
 The vector index is stored in `chroma_db/` (excluded from git).
 
+### Table extraction and summarization
+
+Extracts tables from a PDF, displays them as structured HTML, and summarizes with an LLM:
+
+```powershell
+python ./preprocessing/app_table.py data/embedded-images-tables.pdf
+```
+
+### Multi-document RAG bot
+
+End-to-end pipeline that partitions, chunks, and indexes three document types (PDF, PPTX, Markdown) into a single Chroma collection, then answers questions with optional per-source filtering:
+
+```powershell
+# Kör med standardfiler
+python ./preprocessing/app_rag_bot.py
+
+# Eller välj egna filer
+python ./preprocessing/app_rag_bot.py --pdf data/annan.pdf --pptx data/annan.pptx --md data/annan.md
+```
+
+Default-filer: `data/post_ocr.pdf`, `data/kg-paulo.pptx`, `data/devops-roadmap.md`
+
+The vector index is stored in `chroma_db_rag/` (excluded from git).
+
+| Script | vs `app_rag.py` |
+|--------|----------------|
+| `app_rag.py` | Flexible — takes any `chunks.json`, skips re-indexing, supports chapter/page filters |
+| `app_rag_bot.py` | Complete — partitions + indexes + queries in one run, multi-document, source filtering |
+
 ## Strategy (PDF only)
 
-In `intro/app_pdf.py` you can choose between two strategies:
+In `preprocessing/app_pdf.py` you can choose between two strategies:
 
 | Strategy | Speed | Requires | Best for |
 |----------|-------|----------|----------|
