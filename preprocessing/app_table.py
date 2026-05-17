@@ -5,7 +5,10 @@ import argparse
 from io import StringIO
 
 load_dotenv()
-_env = dotenv_values()  # read .env into a dict before unstructured imports touch os.environ
+_env = dotenv_values()
+for _key in ("HF_TOKEN", "HUGGING_FACE_HUB_TOKEN"):
+    if _env.get("HF_TOKEN"):
+        os.environ[_key] = _env["HF_TOKEN"]
 
 from unstructured.partition.pdf import partition_pdf
 from openai import OpenAI

@@ -13,6 +13,7 @@ __pycache__/
 
 # Chroma vector store
 chroma_db/
+chroma_db_rag/
 
 # Test data
 *.pdf

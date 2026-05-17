@@ -1,5 +1,10 @@
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values
+import os
 load_dotenv()
+_env = dotenv_values()
+for _key in ("HF_TOKEN", "HUGGING_FACE_HUB_TOKEN"):
+    if _env.get("HF_TOKEN"):
+        os.environ[_key] = _env["HF_TOKEN"]
 
 from unstructured.partition.pdf import partition_pdf
 from unstructured.chunking.title import chunk_by_title

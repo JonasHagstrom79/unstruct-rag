@@ -6,6 +6,10 @@ from io import StringIO
 
 _env = dotenv_values()
 
+for _key in ("HF_TOKEN", "HUGGING_FACE_HUB_TOKEN"):
+    if _env.get("HF_TOKEN"):
+        os.environ[_key] = _env["HF_TOKEN"]
+
 from unstructured.partition.pdf import partition_pdf
 from unstructured.partition.pptx import partition_pptx
 from unstructured.partition.md import partition_md
@@ -18,9 +22,10 @@ unstructured_pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesserac
 openai_api_key = _env.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
 
 parser = argparse.ArgumentParser(description="Multi-document RAG bot (PDF + PPTX + Markdown).")
-parser.add_argument("--pdf",  default="data/post_ocr.pdf",       help="Path to PDF file")
-parser.add_argument("--pptx", default="data/kg-paulo.pptx",      help="Path to PPTX file")
-parser.add_argument("--md",   default="data/devops-roadmap.md",  help="Path to Markdown file")
+parser.add_argument("--pdf",   default="data/post_ocr.pdf",      help="Path to PDF file")
+parser.add_argument("--pptx",  default="data/kg-paulo.pptx",     help="Path to PPTX file")
+parser.add_argument("--md",    default="data/devops-roadmap.md", help="Path to Markdown file")
+parser.add_argument("--reset", action="store_true",              help="Clear existing index and re-index documents")
 args = parser.parse_args()
 
 persist_directory = "./chroma_db_rag/"
@@ -84,35 +89,66 @@ elements = chunk_by_title(
 )
 print(f"\nTotal chunks: {len(elements)}")
 
+# ---------- 5b. Export elements and chunks to JSON ----------
+import json
+from unstructured.staging.base import elements_to_json
+
+def export_source(source_elements, source_path):
+    name = os.path.splitext(os.path.basename(source_path))[0]
+    out_dir = os.path.join(os.path.dirname(__file__), "../output", name)
+    os.makedirs(out_dir, exist_ok=True)
+    elements_file = os.path.join(out_dir, "elements.json")
+    with open(elements_file, "w", encoding="utf-8") as f:
+        f.write(elements_to_json(source_elements))
+    print(f"Exported {len(source_elements)} elements → {elements_file}")
+
+export_source(pdf_elements, args.pdf)
+export_source(pptx_elements, args.pptx)
+export_source(md_elements, args.md)
+
+chunks_file = os.path.join(os.path.dirname(__file__), "../output/rag_bot_chunks.json")
+chunks_dicts = [{"text": el.text, "metadata": el.metadata.to_dict()} for el in elements]
+with open(chunks_file, "w", encoding="utf-8") as f:
+    json.dump(chunks_dicts, f, indent=2, ensure_ascii=False)
+print(f"Exported {len(elements)} combined chunks → {chunks_file}")
+
 # ---------- 6. Build LangChain documents ----------
 from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores.utils import filter_complex_metadata
-
-documents = []
-for element in elements:
-    metadata = element.metadata.to_dict()
-    metadata.pop("languages", None)
-    metadata["source"] = metadata.get("filename", "unknown")
-    documents.append(Document(page_content=element.text, metadata=metadata))
-
-print("\n== Sample Document ==")
-pprint.pprint(documents[3])
-
-# ---------- 7. Index into Chroma ----------
 from langchain_chroma import Chroma
+from langchain_community.vectorstores.utils import filter_complex_metadata
 
 embeddings = OpenAIEmbeddings(api_key=openai_api_key)
 
-vectorstore = Chroma.from_documents(
-    filter_complex_metadata(documents),
-    embeddings,
-    persist_directory=persist_directory,
-)
-print(f"\nIndexed {len(documents)} documents into Chroma.")
+# ---------- 7. Index into Chroma (skip if already indexed) ----------
+vector_store = Chroma(persist_directory=persist_directory, embedding_function=embeddings)
+existing_count = vector_store._collection.count()
+
+if existing_count > 0 and not args.reset:
+    print(f"\nDatabase already has {existing_count} documents. Skipping indexing. (Use --reset to re-index.)")
+else:
+    if args.reset and existing_count > 0:
+        vector_store.delete_collection()
+        print(f"Cleared existing index ({existing_count} documents).")
+    documents = []
+    for element in elements:
+        metadata = element.metadata.to_dict()
+        metadata.pop("languages", None)
+        metadata["source"] = metadata.get("filename", "unknown")
+        documents.append(Document(page_content=element.text, metadata=metadata))
+
+    print("\n== Sample Document ==")
+    pprint.pprint(documents[3])
+
+    Chroma.from_documents(
+        filter_complex_metadata(documents),
+        embeddings,
+        persist_directory=persist_directory,
+    )
+    print(f"\nIndexed {len(documents)} documents into Chroma.")
+    vector_store = Chroma(persist_directory=persist_directory, embedding_function=embeddings)
 
 # ---------- 8. Load persisted DB and create retriever ----------
-vector_store = Chroma(persist_directory=persist_directory, embedding_function=embeddings)
 retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 3})
 
 # ---------- 9. Build RAG chain (LCEL) ----------

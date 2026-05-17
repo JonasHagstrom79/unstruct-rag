@@ -116,13 +116,25 @@ End-to-end pipeline that partitions, chunks, and indexes three document types (P
 # Kör med standardfiler
 python ./preprocessing/app_rag_bot.py
 
-# Eller välj egna filer
+# Välj egna filer
 python ./preprocessing/app_rag_bot.py --pdf data/annan.pdf --pptx data/annan.pptx --md data/annan.md
+
+# Tvinga omindexering (t.ex. efter byte av dokument)
+python ./preprocessing/app_rag_bot.py --reset
 ```
 
 Default-filer: `data/post_ocr.pdf`, `data/kg-paulo.pptx`, `data/devops-roadmap.md`
 
 The vector index is stored in `chroma_db_rag/` (excluded from git).
+
+#### Output
+
+Each run saves extracted elements and chunks to disk:
+
+| File | Contents |
+|------|----------|
+| `output/<source>/elements.json` | Extracted elements per source file |
+| `output/rag_bot_chunks.json` | All combined chunks from all three sources |
 
 | Script | vs `app_rag.py` |
 |--------|----------------|
